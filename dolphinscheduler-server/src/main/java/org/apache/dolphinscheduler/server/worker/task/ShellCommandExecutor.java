@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -113,11 +114,10 @@ public class ShellCommandExecutor extends AbstractCommandExecutor {
 
             sb.append("\n\n");
             sb.append(execCommand);
-            logger.info("command : {}",sb.toString());
+            logger.info("command : {}", sb);
 
             // write data to file
-            FileUtils.writeStringToFile(new File(commandFile), sb.toString(),
-                    Charset.forName("UTF-8"));
+            FileUtils.writeStringToFile(new File(commandFile), sb.toString(), StandardCharsets.UTF_8);
         }
     }
 

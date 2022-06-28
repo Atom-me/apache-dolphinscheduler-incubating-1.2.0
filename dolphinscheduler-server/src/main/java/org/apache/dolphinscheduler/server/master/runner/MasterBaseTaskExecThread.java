@@ -129,6 +129,7 @@ public class MasterBaseTaskExecThread implements Callable<Boolean> {
 
         while (retryTimes <= commitRetryTimes){
             try {
+                //提交任务实例到mysql 和 ZK task 队列
                 TaskInstance task = processDao.submitTask(taskInstance, processInstance);
                 if(task != null){
                     return task;

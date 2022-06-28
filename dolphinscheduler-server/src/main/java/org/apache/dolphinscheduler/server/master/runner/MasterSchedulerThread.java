@@ -97,6 +97,7 @@ public class MasterSchedulerThread implements Runnable {
             InterProcessMutex mutex = null;
             try {
 
+                // 检查系统物理资源/CPU/MEM
                 if(OSUtils.checkResource(conf, true)){
                     if (zkMasterClient.getZkClient().getState() == CuratorFrameworkState.STARTED) {
 
@@ -114,9 +115,12 @@ public class MasterSchedulerThread implements Runnable {
                             logger.info(String.format("find one command: id: %d, type: %s", command.getId(),command.getCommandType().toString()));
 
                             try{
+                                // 处理 command 生成 流程定义实例信息
                                 processInstance = processDao.handleCommand(logger, OSUtils.getHost(), this.masterExecThreadNum - activeCount, command);
+
                                 if (processInstance != null) {
                                     logger.info("start master exec thread , split DAG ...");
+
                                     masterExecService.execute(new MasterExecThread(processInstance,processDao));
                                 }
                             }catch (Exception e){

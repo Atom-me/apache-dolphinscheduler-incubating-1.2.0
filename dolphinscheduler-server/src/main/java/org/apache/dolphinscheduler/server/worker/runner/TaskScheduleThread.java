@@ -19,6 +19,9 @@ package org.apache.dolphinscheduler.server.worker.runner;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.sift.SiftingAppender;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.sift.Discriminator;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.enums.ExecutionStatus;
@@ -38,6 +41,7 @@ import org.apache.dolphinscheduler.server.worker.log.TaskLogDiscriminator;
 import org.apache.dolphinscheduler.server.worker.task.AbstractTask;
 import org.apache.dolphinscheduler.server.worker.task.TaskManager;
 import org.apache.dolphinscheduler.server.worker.task.TaskProps;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,10 +212,16 @@ public class TaskScheduleThread implements Runnable {
      * @return
      */
     private String getTaskLogPath() {
-        String baseLog = ((TaskLogDiscriminator) ((SiftingAppender) ((LoggerContext) LoggerFactory.getILoggerFactory())
-                .getLogger("ROOT")
-                .getAppender("TASKLOGFILE"))
-                .getDiscriminator()).getLogBase();
+//        String baseLog = ((TaskLogDiscriminator) ((SiftingAppender) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("TASKLOGFILE"))
+//                .getDiscriminator())
+//                .getLogBase();
+
+        ch.qos.logback.classic.Logger root = ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT");
+        SiftingAppender taskLogFileAppender = (SiftingAppender) root.getAppender("TASKLOGFILE");
+        TaskLogDiscriminator discriminator = (TaskLogDiscriminator) taskLogFileAppender.getDiscriminator();
+        String baseLog = discriminator.getLogBase();
+
+
         if (baseLog.startsWith(Constants.SINGLE_SLASH)){
             return baseLog + Constants.SINGLE_SLASH +
                     taskInstance.getProcessDefinitionId() + Constants.SINGLE_SLASH  +

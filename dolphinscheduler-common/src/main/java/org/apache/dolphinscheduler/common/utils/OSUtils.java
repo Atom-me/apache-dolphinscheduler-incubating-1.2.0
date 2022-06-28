@@ -16,6 +16,7 @@
  */
 package org.apache.dolphinscheduler.common.utils;
 
+import org.apache.commons.lang.SystemUtils;
 import org.apache.dolphinscheduler.common.Constants;
 import org.apache.dolphinscheduler.common.shell.ShellExecutor;
 import org.apache.commons.configuration.Configuration;
@@ -38,7 +39,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * os utils
@@ -50,6 +54,12 @@ public class OSUtils {
 
   private static final SystemInfo SI = new SystemInfo();
   public static final String TWO_DECIMAL = "0.00";
+
+  /**
+   * Initialization regularization, solve the problem of pre-compilation performance,
+   * avoid the thread safety problem of multi-thread operation
+   */
+  private static final Pattern PATTERN = Pattern.compile("\\s+");
 
   private static HardwareAbstractionLayer hal = SI.getHardware();
 
@@ -138,12 +148,61 @@ public class OSUtils {
    *
    * @return user list
    */
-  public static List<String> getUserList() {
-    List<String> userList = new ArrayList<>();
-    BufferedReader bufferedReader = null;
+//  public static List<String> getUserList() {
+//    List<String> userList = new ArrayList<>();
+//    BufferedReader bufferedReader = null;
+//
+//    try {
+//      bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream("/etc/passwd")));
+//      String line;
+//
+//      while ((line = bufferedReader.readLine()) != null) {
+//        if (line.contains(":")) {
+//          String[] userInfo = line.split(":");
+//          userList.add(userInfo[0]);
+//        }
+//      }
+//    } catch (Exception e) {
+//      logger.error(e.getMessage(), e);
+//    } finally {
+//      try {
+//        if (bufferedReader != null) {
+//          bufferedReader.close();
+//        }
+//      } catch (IOException e) {
+//        logger.error(e.getMessage(), e);
+//      }
+//    }
+//
+//    return userList;
+//  }
 
+  public static List<String> getUserList() {
     try {
-      bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream("/etc/passwd")));
+      if (SystemUtils.IS_OS_MAC) {
+        return getUserListFromMac();
+      } else if (SystemUtils.IS_OS_WINDOWS) {
+        return getUserListFromWindows();
+      } else {
+        return getUserListFromLinux();
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+    }
+
+    return Collections.emptyList();
+  }
+
+  /**
+   * get user list from linux
+   *
+   * @return user list
+   */
+  private static List<String> getUserListFromLinux() throws IOException {
+    List<String> userList = new ArrayList<>();
+
+    try (BufferedReader bufferedReader = new BufferedReader(
+            new InputStreamReader(new FileInputStream("/etc/passwd")))) {
       String line;
 
       while ((line = bufferedReader.readLine()) != null) {
@@ -152,19 +211,62 @@ public class OSUtils {
           userList.add(userInfo[0]);
         }
       }
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-    } finally {
-      try {
-        if (bufferedReader != null) {
-          bufferedReader.close();
-        }
-      } catch (IOException e) {
-        logger.error(e.getMessage(), e);
-      }
     }
 
     return userList;
+  }
+
+  /**
+   * get user list from mac
+   *
+   * @return user list
+   */
+  private static List<String> getUserListFromMac() throws IOException {
+    String result = exeCmd("dscl . list /users");
+    if (StringUtils.isNotEmpty(result)) {
+      return Arrays.asList(result.split("\n"));
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * get user list from windows
+   *
+   * @return user list
+   */
+  private static List<String> getUserListFromWindows() throws IOException {
+    String result = exeCmd("net user");
+    String[] lines = result.split("\n");
+
+    int startPos = 0;
+    int endPos = lines.length - 2;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].isEmpty()) {
+        continue;
+      }
+
+      int count = 0;
+      if (lines[i].charAt(0) == '-') {
+        for (int j = 0; j < lines[i].length(); j++) {
+          if (lines[i].charAt(i) == '-') {
+            count++;
+          }
+        }
+      }
+
+      if (count == lines[i].length()) {
+        startPos = i + 1;
+        break;
+      }
+    }
+
+    List<String> users = new ArrayList<>();
+    while (startPos <= endPos) {
+      users.addAll(Arrays.asList(PATTERN.split(lines[startPos])));
+      startPos++;
+    }
+
+    return users;
   }
 
   /**

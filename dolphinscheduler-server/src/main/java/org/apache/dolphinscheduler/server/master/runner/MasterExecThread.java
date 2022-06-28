@@ -203,6 +203,7 @@ public class MasterExecThread implements Runnable {
      */
     private void executeProcess() throws Exception {
         prepareProcess();
+        // 生成任务实例，提交任务到 mysql 、ZK task 队列
         runProcess();
         endProcess();
     }
@@ -385,6 +386,7 @@ public class MasterExecThread implements Runnable {
         if(taskInstance.isSubProcess()){
             abstractExecThread = new SubProcessTaskExecThread(taskInstance, processInstance);
         }else {
+            //提交当前任务到 mysql，生成任务实例 ，ZK task队列 ，调用 MasterTaskExecThread call 方法
             abstractExecThread = new MasterTaskExecThread(taskInstance, processInstance);
         }
         Future<Boolean> future = taskExecService.submit(abstractExecThread);
@@ -493,6 +495,7 @@ public class MasterExecThread implements Runnable {
      */
     private List<TaskInstance> getStartSubmitTaskList(){
 
+        // 构建任务实例信息
         List<TaskInstance> startTaskList = getPostTaskInstanceByNode(dag, null);
 
         HashMap<String, TaskInstance> successTaskMaps = new HashMap<>();
@@ -527,11 +530,13 @@ public class MasterExecThread implements Runnable {
 
         List<TaskInstance> submitTaskList = null;
         if(parentNodeName == null){
+            // 构建任务实例信息
             submitTaskList = getStartSubmitTaskList();
         }else{
             submitTaskList = getPostTaskInstanceByNode(dag, parentNodeName);
         }
         // if previous node success , post node submit
+        // 前置任务成功之后再提交后置任务
         for(TaskInstance task : submitTaskList){
             if(readyToSubmitTaskList.containsKey(task.getName())){
                 continue;
@@ -889,6 +894,7 @@ public class MasterExecThread implements Runnable {
                     }
                 }
             }
+            // 如果物理资源足够，提交任务实例到 mysql zk 任务队列。
             if(canSubmitTaskToQueue()){
                 submitStandByTask();
             }
@@ -988,6 +994,7 @@ public class MasterExecThread implements Runnable {
         for(Map.Entry<String, TaskInstance> entry: readyToSubmitTaskList.entrySet()) {
             TaskInstance task = entry.getValue();
             DependResult dependResult = getDependResultForTask(task);
+            //依赖任务执行成功之后，提交当前任务到 mysql，生成任务实例 ，ZK task队列
             if(DependResult.SUCCESS == dependResult){
                 if(retryTaskIntervalOverTime(task)){
                     submitTaskExec(task);

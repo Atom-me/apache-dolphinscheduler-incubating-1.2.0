@@ -49,41 +49,43 @@ public class ExecutorController extends BaseController {
     private ExecutorService execService;
 
     /**
+     * 手动执行工作流定义
      * execute process instance
-     * @param loginUser login user
-     * @param projectName project name
-     * @param processDefinitionId process definition id
-     * @param scheduleTime schedule time
-     * @param failureStrategy failure strategy
-     * @param startNodeList start nodes list
-     * @param taskDependType task depend type
-     * @param execType execute type
-     * @param warningType warning type
-     * @param warningGroupId warning group id
-     * @param receivers receivers
-     * @param receiversCc receivers cc
-     * @param runMode run mode
+     *
+     * @param loginUser               login user
+     * @param projectName             project name
+     * @param processDefinitionId     process definition id
+     * @param scheduleTime            schedule time
+     * @param failureStrategy         failure strategy
+     * @param startNodeList           start nodes list
+     * @param taskDependType          task depend type
+     * @param execType                execute type
+     * @param warningType             warning type
+     * @param warningGroupId          warning group id
+     * @param receivers               receivers
+     * @param receiversCc             receivers cc
+     * @param runMode                 run mode
      * @param processInstancePriority process instance priority
-     * @param workerGroupId worker group id
-     * @param timeout timeout
+     * @param workerGroupId           worker group id
+     * @param timeout                 timeout
      * @return start process result code
      */
-    @ApiOperation(value = "startProcessInstance", notes= "RUN_PROCESS_INSTANCE_NOTES")
+    @ApiOperation(value = "startProcessInstance", notes = "RUN_PROCESS_INSTANCE_NOTES")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "processDefinitionId", value = "PROCESS_DEFINITION_ID", required = true, dataType = "Int", example = "100"),
             @ApiImplicitParam(name = "scheduleTime", value = "SCHEDULE_TIME", required = true, dataType = "String"),
-            @ApiImplicitParam(name = "failureStrategy", value = "FAILURE_STRATEGY", required = true, dataType ="FailureStrategy"),
-            @ApiImplicitParam(name = "startNodeList", value = "START_NODE_LIST", dataType ="String"),
-            @ApiImplicitParam(name = "taskDependType", value = "TASK_DEPEND_TYPE", dataType ="TaskDependType"),
-            @ApiImplicitParam(name = "execType", value = "COMMAND_TYPE", dataType ="CommandType"),
-            @ApiImplicitParam(name = "warningType", value = "WARNING_TYPE",required = true, dataType ="WarningType"),
-            @ApiImplicitParam(name = "warningGroupId", value = "WARNING_GROUP_ID",required = true, dataType ="Int", example = "100"),
-            @ApiImplicitParam(name = "receivers", value = "RECEIVERS",dataType ="String" ),
-            @ApiImplicitParam(name = "receiversCc", value = "RECEIVERS_CC",dataType ="String" ),
-            @ApiImplicitParam(name = "runMode", value = "RUN_MODE",dataType ="RunMode" ),
-            @ApiImplicitParam(name = "processInstancePriority", value = "PROCESS_INSTANCE_PRIORITY", required = true, dataType = "Priority" ),
-            @ApiImplicitParam(name = "workerGroupId", value = "WORKER_GROUP_ID", dataType = "Int",example = "100"),
-            @ApiImplicitParam(name = "timeout", value = "TIMEOUT", dataType = "Int",example = "100"),
+            @ApiImplicitParam(name = "failureStrategy", value = "FAILURE_STRATEGY", required = true, dataType = "FailureStrategy"),
+            @ApiImplicitParam(name = "startNodeList", value = "START_NODE_LIST", dataType = "String"),
+            @ApiImplicitParam(name = "taskDependType", value = "TASK_DEPEND_TYPE", dataType = "TaskDependType"),
+            @ApiImplicitParam(name = "execType", value = "COMMAND_TYPE", dataType = "CommandType"),
+            @ApiImplicitParam(name = "warningType", value = "WARNING_TYPE", required = true, dataType = "WarningType"),
+            @ApiImplicitParam(name = "warningGroupId", value = "WARNING_GROUP_ID", required = true, dataType = "Int", example = "100"),
+            @ApiImplicitParam(name = "receivers", value = "RECEIVERS", dataType = "String"),
+            @ApiImplicitParam(name = "receiversCc", value = "RECEIVERS_CC", dataType = "String"),
+            @ApiImplicitParam(name = "runMode", value = "RUN_MODE", dataType = "RunMode"),
+            @ApiImplicitParam(name = "processInstancePriority", value = "PROCESS_INSTANCE_PRIORITY", required = true, dataType = "Priority"),
+            @ApiImplicitParam(name = "workerGroupId", value = "WORKER_GROUP_ID", dataType = "Int", example = "100"),
+            @ApiImplicitParam(name = "timeout", value = "TIMEOUT", dataType = "Int", example = "100"),
     })
     @PostMapping(value = "start-process-instance")
     @ResponseStatus(HttpStatus.OK)
@@ -108,7 +110,7 @@ public class ExecutorController extends BaseController {
                             + "failure policy: {}, node name: {}, node dep: {}, notify type: {}, "
                             + "notify group id: {},receivers:{},receiversCc:{}, run mode: {},process instance priority:{}, workerGroupId: {}, timeout: {}",
                     loginUser.getUserName(), projectName, processDefinitionId, scheduleTime,
-                    failureStrategy, startNodeList, taskDependType, warningType, warningGroupId,receivers,receiversCc,runMode,processInstancePriority,
+                    failureStrategy, startNodeList, taskDependType, warningType, warningGroupId, receivers, receiversCc, runMode, processInstancePriority,
                     workerGroupId, timeout);
 
             if (timeout == null) {
@@ -116,11 +118,11 @@ public class ExecutorController extends BaseController {
             }
 
             Map<String, Object> result = execService.execProcessInstance(loginUser, projectName, processDefinitionId, scheduleTime, execType, failureStrategy,
-                            startNodeList, taskDependType, warningType,
-                    warningGroupId,receivers,receiversCc, runMode,processInstancePriority, workerGroupId, timeout);
+                    startNodeList, taskDependType, warningType,
+                    warningGroupId, receivers, receiversCc, runMode, processInstancePriority, workerGroupId, timeout);
             return returnDataList(result);
         } catch (Exception e) {
-            logger.error(Status.START_PROCESS_INSTANCE_ERROR.getMsg(),e);
+            logger.error(Status.START_PROCESS_INSTANCE_ERROR.getMsg(), e);
             return error(Status.START_PROCESS_INSTANCE_ERROR.getCode(), Status.START_PROCESS_INSTANCE_ERROR.getMsg());
         }
     }
@@ -129,13 +131,13 @@ public class ExecutorController extends BaseController {
     /**
      * do action to process instance：pause, stop, repeat, recover from pause, recover from stop
      *
-     * @param loginUser login user
-     * @param projectName project name
+     * @param loginUser         login user
+     * @param projectName       project name
      * @param processInstanceId process instance id
-     * @param executeType execute type
+     * @param executeType       execute type
      * @return execute result code
      */
-    @ApiOperation(value = "execute", notes= "EXECUTE_ACTION_TO_PROCESS_INSTANCE_NOTES")
+    @ApiOperation(value = "execute", notes = "EXECUTE_ACTION_TO_PROCESS_INSTANCE_NOTES")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "processInstanceId", value = "PROCESS_INSTANCE_ID", required = true, dataType = "Int", example = "100"),
             @ApiImplicitParam(name = "executeType", value = "EXECUTE_TYPE", required = true, dataType = "ExecuteType")
@@ -153,47 +155,49 @@ public class ExecutorController extends BaseController {
             Map<String, Object> result = execService.execute(loginUser, projectName, processInstanceId, executeType);
             return returnDataList(result);
         } catch (Exception e) {
-            logger.error(Status.EXECUTE_PROCESS_INSTANCE_ERROR.getMsg(),e);
+            logger.error(Status.EXECUTE_PROCESS_INSTANCE_ERROR.getMsg(), e);
             return error(Status.EXECUTE_PROCESS_INSTANCE_ERROR.getCode(), Status.EXECUTE_PROCESS_INSTANCE_ERROR.getMsg());
         }
     }
 
     /**
+     * 手动运行前置检查接口，运行当前流程的前提是所有子流程定义必须全部上线
      * check process definition and all of the son process definitions is on line.
      *
-     * @param loginUser login user
+     * @param loginUser           login user
      * @param processDefinitionId process definition id
      * @return check result code
      */
-    @ApiOperation(value = "startCheckProcessDefinition", notes= "START_CHECK_PROCESS_DEFINITION_NOTES")
+    @ApiOperation(value = "startCheckProcessDefinition", notes = "START_CHECK_PROCESS_DEFINITION_NOTES")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "processDefinitionId", value = "PROCESS_DEFINITION_ID", required = true, dataType = "Int", example = "100")
     })
     @PostMapping(value = "/start-check")
     @ResponseStatus(HttpStatus.OK)
     public Result startCheckProcessDefinition(@ApiIgnore @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                             @RequestParam(value = "processDefinitionId") int processDefinitionId) {
+                                              @RequestParam(value = "processDefinitionId") int processDefinitionId) {
         logger.info("login user {}, check process definition", loginUser.getUserName(), processDefinitionId);
         try {
             Map<String, Object> result = execService.startCheckByProcessDefinedId(processDefinitionId);
             return returnDataList(result);
 
         } catch (Exception e) {
-            logger.error(Status.CHECK_PROCESS_DEFINITION_ERROR.getMsg(),e);
+            logger.error(Status.CHECK_PROCESS_DEFINITION_ERROR.getMsg(), e);
             return error(Status.CHECK_PROCESS_DEFINITION_ERROR.getCode(), Status.CHECK_PROCESS_DEFINITION_ERROR.getMsg());
         }
     }
 
     /**
+     * 手动执行流程定义前，显获取获取告警设置中的收件人和抄送人给页面启动前 配置告警信息使用。
      * query recipients and copyers by process definition ID
      *
-     * @param loginUser login user
+     * @param loginUser           login user
      * @param processDefinitionId process definition id
-     * @param processInstanceId process instance id
+     * @param processInstanceId   process instance id
      * @return receivers cc list
      */
     @ApiIgnore
-    @ApiOperation(value = "getReceiverCc", notes= "GET_RECEIVER_CC_NOTES")
+    @ApiOperation(value = "getReceiverCc", notes = "GET_RECEIVER_CC_NOTES")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "processDefinitionId", value = "PROCESS_DEFINITION_ID", required = true, dataType = "Int", example = "100"),
             @ApiImplicitParam(name = "processInstanceId", value = "PROCESS_INSTANCE_ID", required = true, dataType = "Int", example = "100")
@@ -202,14 +206,14 @@ public class ExecutorController extends BaseController {
     @GetMapping(value = "/get-receiver-cc")
     @ResponseStatus(HttpStatus.OK)
     public Result getReceiverCc(@ApiIgnore @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                @RequestParam(value = "processDefinitionId",required = false) Integer processDefinitionId,
-                                @RequestParam(value = "processInstanceId",required = false) Integer processInstanceId) {
+                                @RequestParam(value = "processDefinitionId", required = false) Integer processDefinitionId,
+                                @RequestParam(value = "processInstanceId", required = false) Integer processInstanceId) {
         logger.info("login user {}, get process definition receiver and cc", loginUser.getUserName());
         try {
-            Map<String, Object> result = execService.getReceiverCc(processDefinitionId,processInstanceId);
+            Map<String, Object> result = execService.getReceiverCc(processDefinitionId, processInstanceId);
             return returnDataList(result);
         } catch (Exception e) {
-            logger.error(Status.QUERY_RECIPIENTS_AND_COPYERS_BY_PROCESS_DEFINITION_ERROR.getMsg(),e);
+            logger.error(Status.QUERY_RECIPIENTS_AND_COPYERS_BY_PROCESS_DEFINITION_ERROR.getMsg(), e);
             return error(Status.QUERY_RECIPIENTS_AND_COPYERS_BY_PROCESS_DEFINITION_ERROR.getCode(), Status.QUERY_RECIPIENTS_AND_COPYERS_BY_PROCESS_DEFINITION_ERROR.getMsg());
         }
     }

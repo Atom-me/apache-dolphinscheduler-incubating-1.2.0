@@ -73,7 +73,9 @@ public class MasterTaskExecThread extends MasterBaseTaskExecThread {
     @Override
     public Boolean submitWaitComplete() {
         Boolean result = false;
+        //提交当前任务到 mysql，生成任务实例 ，ZK task队列
         this.taskInstance = submit();
+
         if(!this.taskInstance.getState().typeIsFinished()) {
             result = waitTaskQuit();
         }
