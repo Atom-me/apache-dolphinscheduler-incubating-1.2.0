@@ -115,7 +115,7 @@ public class MasterSchedulerThread implements Runnable {
                             logger.info(String.format("find one command: id: %d, type: %s", command.getId(),command.getCommandType().toString()));
 
                             try{
-                                // 处理 command 生成 流程定义实例信息
+                                // 处理 command 创建流程实例
                                 processInstance = processDao.handleCommand(logger, OSUtils.getHost(), this.masterExecThreadNum - activeCount, command);
 
                                 if (processInstance != null) {

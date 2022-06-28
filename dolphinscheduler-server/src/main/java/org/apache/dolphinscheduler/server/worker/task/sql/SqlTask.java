@@ -57,23 +57,24 @@ import java.util.stream.Collectors;
 
 import static org.apache.dolphinscheduler.common.Constants.*;
 import static org.apache.dolphinscheduler.common.enums.DbType.HIVE;
+
 /**
  * sql task
  */
 public class SqlTask extends AbstractTask {
 
     /**
-     *  sql parameters
+     * sql parameters
      */
     private SqlParameters sqlParameters;
 
     /**
-     *  process database access
+     * process database access
      */
     private ProcessDao processDao;
 
     /**
-     *  alert dao
+     * alert dao
      */
     private AlertDao alertDao;
 
@@ -117,13 +118,13 @@ public class SqlTask extends AbstractTask {
                 sqlParameters.getConnParams());
 
         // not set data source
-        if (sqlParameters.getDatasource() == 0){
+        if (sqlParameters.getDatasource() == 0) {
             logger.error("datasource id not exists");
             exitStatusCode = -1;
             return;
         }
 
-        dataSource= processDao.findDataSourceById(sqlParameters.getDatasource());
+        dataSource = processDao.findDataSourceById(sqlParameters.getDatasource());
         logger.info("datasource name : {} , type : {} , desc : {}  , user_id : {} , parameter : {}",
                 dataSource.getName(),
                 dataSource.getType(),
@@ -131,7 +132,7 @@ public class SqlTask extends AbstractTask {
                 dataSource.getUserId(),
                 dataSource.getConnectionParams());
 
-        if (dataSource == null){
+        if (dataSource == null) {
             logger.error("datasource not exists");
             exitStatusCode = -1;
             return;
@@ -162,11 +163,11 @@ public class SqlTask extends AbstractTask {
             // determine if it is UDF
             boolean udfTypeFlag = EnumUtils.isValidEnum(UdfType.class, sqlParameters.getType())
                     && StringUtils.isNotEmpty(sqlParameters.getUdfs());
-            if(udfTypeFlag){
+            if (udfTypeFlag) {
                 String[] ids = sqlParameters.getUdfs().split(",");
                 int[] idsArray = new int[ids.length];
-                for(int i=0;i<ids.length;i++){
-                    idsArray[i]=Integer.parseInt(ids[i]);
+                for (int i = 0; i < ids.length; i++) {
+                    idsArray[i] = Integer.parseInt(ids[i]);
                 }
                 List<UdfFunc> udfFuncList = processDao.queryUdfFunListByids(idsArray);
                 createFuncs = UDFUtils.createFuncs(udfFuncList, taskProps.getTenantCode(), logger);
@@ -186,11 +187,12 @@ public class SqlTask extends AbstractTask {
     }
 
     /**
-     *  ready to execute SQL and parameter entity Map
+     * ready to execute SQL and parameter entity Map
+     *
      * @return
      */
     private SqlBinds getSqlAndSqlParamsMap(String sql) {
-        Map<Integer,Property> sqlParamsMap =  new HashMap<>();
+        Map<Integer, Property> sqlParamsMap = new HashMap<>();
         StringBuilder sqlBuilder = new StringBuilder();
 
         // find process instance by task id
@@ -203,15 +205,15 @@ public class SqlTask extends AbstractTask {
                 taskProps.getScheduleTime());
 
         // spell SQL according to the final user-defined variable
-        if(paramsMap == null){
+        if (paramsMap == null) {
             sqlBuilder.append(sql);
             return new SqlBinds(sqlBuilder.toString(), sqlParamsMap);
         }
 
-        if (StringUtils.isNotEmpty(sqlParameters.getTitle())){
+        if (StringUtils.isNotEmpty(sqlParameters.getTitle())) {
             String title = ParameterUtils.convertParameterPlaceholders(sqlParameters.getTitle(),
                     ParamUtils.convert(paramsMap));
-            logger.info("SQL tile : {}",title);
+            logger.info("SQL tile : {}", title);
             sqlParameters.setTitle(title);
         }
 
@@ -220,11 +222,11 @@ public class SqlTask extends AbstractTask {
         setSqlParamsMap(sql, rgex, sqlParamsMap, paramsMap);
 
         // replace the ${} of the SQL statement with the Placeholder
-        String formatSql = sql.replaceAll(rgex,"?");
+        String formatSql = sql.replaceAll(rgex, "?");
         sqlBuilder.append(formatSql);
 
         // print repalce sql
-        printReplacedSql(sql,formatSql,rgex,sqlParamsMap);
+        printReplacedSql(sql, formatSql, rgex, sqlParamsMap);
         return new SqlBinds(sqlBuilder.toString(), sqlParamsMap);
     }
 
@@ -235,16 +237,17 @@ public class SqlTask extends AbstractTask {
 
     /**
      * execute function and sql
-     * @param mainSqlBinds          main sql binds
-     * @param preStatementsBinds    pre statements binds
-     * @param postStatementsBinds   post statements binds
-     * @param createFuncs           create functions
+     *
+     * @param mainSqlBinds        main sql binds
+     * @param preStatementsBinds  pre statements binds
+     * @param postStatementsBinds post statements binds
+     * @param createFuncs         create functions
      * @return Connection
      */
     public Connection executeFuncAndSql(SqlBinds mainSqlBinds,
                                         List<SqlBinds> preStatementsBinds,
                                         List<SqlBinds> postStatementsBinds,
-                                        List<String> createFuncs){
+                                        List<String> createFuncs) {
         Connection connection = null;
         try {
             // if upload resource is HDFS and kerberos startup
@@ -258,13 +261,13 @@ public class SqlTask extends AbstractTask {
                 Map<String, String> connParamMap = CollectionUtils.stringToMap(sqlParameters.getConnParams(),
                         SEMICOLON,
                         HIVE_CONF);
-                if(connParamMap != null){
+                if (connParamMap != null) {
                     paramProp.putAll(connParamMap);
                 }
 
                 connection = DriverManager.getConnection(baseDataSource.getJdbcUrl(),
                         paramProp);
-            }else{
+            } else {
                 connection = DriverManager.getConnection(baseDataSource.getJdbcUrl(),
                         baseDataSource.getUser(),
                         baseDataSource.getPassword());
@@ -280,14 +283,14 @@ public class SqlTask extends AbstractTask {
                 }
             }
 
-            for (SqlBinds sqlBind: preStatementsBinds) {
+            for (SqlBinds sqlBind : preStatementsBinds) {
                 try (PreparedStatement stmt = prepareStatementAndBind(connection, sqlBind)) {
                     int result = stmt.executeUpdate();
-                    logger.info("pre statement execute result: {}, for sql: {}",result,sqlBind.getSql());
+                    logger.info("pre statement execute result: {}, for sql: {}", result, sqlBind.getSql());
                 }
             }
 
-            try (PreparedStatement  stmt = prepareStatementAndBind(connection, mainSqlBinds)) {
+            try (PreparedStatement stmt = prepareStatementAndBind(connection, mainSqlBinds)) {
                 // decide whether to executeQuery or executeUpdate based on sqlType
                 if (sqlParameters.getSqlType() == SqlType.QUERY.ordinal()) {
                     // query statements need to be convert to JsonArray and inserted into Alert to send
@@ -307,13 +310,12 @@ public class SqlTask extends AbstractTask {
                     logger.debug("execute sql : {}", JSONObject.toJSONString(resultJSONArray, SerializerFeature.WriteMapNullValue));
 
                     // if there is a result set
+                    // SQL任务，查询结果邮件发送
                     if (resultJSONArray.size() > 0) {
                         if (StringUtils.isNotEmpty(sqlParameters.getTitle())) {
-                            sendAttachment(sqlParameters.getTitle(),
-                                    JSONObject.toJSONString(resultJSONArray, SerializerFeature.WriteMapNullValue));
-                        }else{
-                            sendAttachment(taskProps.getNodeName() + " query resultsets ",
-                                    JSONObject.toJSONString(resultJSONArray, SerializerFeature.WriteMapNullValue));
+                            sendAttachment(sqlParameters.getTitle(), JSONObject.toJSONString(resultJSONArray, SerializerFeature.WriteMapNullValue));
+                        } else {
+                            sendAttachment(taskProps.getNodeName() + " query resultsets ", JSONObject.toJSONString(resultJSONArray, SerializerFeature.WriteMapNullValue));
                         }
                     }
 
@@ -326,14 +328,14 @@ public class SqlTask extends AbstractTask {
                 }
             }
 
-            for (SqlBinds sqlBind: postStatementsBinds) {
+            for (SqlBinds sqlBind : postStatementsBinds) {
                 try (PreparedStatement stmt = prepareStatementAndBind(connection, sqlBind)) {
                     int result = stmt.executeUpdate();
-                    logger.info("post statement execute result: {},for sql: {}",result,sqlBind.getSql());
+                    logger.info("post statement execute result: {},for sql: {}", result, sqlBind.getSql());
                 }
             }
         } catch (Exception e) {
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
             throw new RuntimeException(e.getMessage());
         }
         return connection;
@@ -341,36 +343,38 @@ public class SqlTask extends AbstractTask {
 
     /**
      * preparedStatement bind
+     *
      * @param connection
      * @param sqlBinds
      * @return
      * @throws Exception
      */
     private PreparedStatement prepareStatementAndBind(Connection connection, SqlBinds sqlBinds) throws Exception {
-        PreparedStatement  stmt = connection.prepareStatement(sqlBinds.getSql());
+        PreparedStatement stmt = connection.prepareStatement(sqlBinds.getSql());
         // is the timeout set
         boolean timeoutFlag = taskProps.getTaskTimeoutStrategy() == TaskTimeoutStrategy.FAILED ||
                 taskProps.getTaskTimeoutStrategy() == TaskTimeoutStrategy.WARNFAILED;
-        if(timeoutFlag){
+        if (timeoutFlag) {
             stmt.setQueryTimeout(taskProps.getTaskTimeout());
         }
         Map<Integer, Property> params = sqlBinds.getParamsMap();
-        if(params != null) {
+        if (params != null) {
             for (Map.Entry<Integer, Property> entry : params.entrySet()) {
                 Property prop = entry.getValue();
                 ParameterUtils.setInParameter(entry.getKey(), stmt, prop.getType(), prop.getValue());
             }
         }
-        logger.info("prepare statement replace sql : {} ",stmt.toString());
+        logger.info("prepare statement replace sql : {} ", stmt.toString());
         return stmt;
     }
 
     /**
      * send mail as an attachment
-     * @param title     title
-     * @param content   content
+     *
+     * @param title   title
+     * @param content content
      */
-    public void sendAttachment(String title,String content){
+    public void sendAttachment(String title, String content) {
 
         //  process instance
         ProcessInstance instance = processDao.findProcessInstanceByTaskId(taskProps.getTaskInstId());
@@ -379,14 +383,14 @@ public class SqlTask extends AbstractTask {
 
         // receiving group list
         List<String> receviersList = new ArrayList<String>();
-        for(User user:users){
+        for (User user : users) {
             receviersList.add(user.getEmail().trim());
         }
         // custom receiver
         String receivers = sqlParameters.getReceivers();
-        if (StringUtils.isNotEmpty(receivers)){
+        if (StringUtils.isNotEmpty(receivers)) {
             String[] splits = receivers.split(COMMA);
-            for (String receiver : splits){
+            for (String receiver : splits) {
                 receviersList.add(receiver.trim());
             }
         }
@@ -395,60 +399,68 @@ public class SqlTask extends AbstractTask {
         List<String> receviersCcList = new ArrayList<String>();
         // Custom Copier
         String receiversCc = sqlParameters.getReceiversCc();
-        if (StringUtils.isNotEmpty(receiversCc)){
+        if (StringUtils.isNotEmpty(receiversCc)) {
             String[] splits = receiversCc.split(COMMA);
-            for (String receiverCc : splits){
+            for (String receiverCc : splits) {
                 receviersCcList.add(receiverCc.trim());
             }
         }
 
-        String showTypeName = sqlParameters.getShowType().replace(COMMA,"").trim();
-        if(EnumUtils.isValidEnum(ShowType.class,showTypeName)){
+        String showTypeName = sqlParameters.getShowType().replace(COMMA, "").trim();
+        if (EnumUtils.isValidEnum(ShowType.class, showTypeName)) {
+
             Map<String, Object> mailResult = MailUtils.sendMails(receviersList,
-                    receviersCcList, title, content, ShowType.valueOf(showTypeName));
-            if(!(Boolean) mailResult.get(STATUS)){
+                    receviersCcList,
+                    title,
+                    content,
+                    ShowType.valueOf(showTypeName));
+
+            if (!(Boolean) mailResult.get(STATUS)) {
                 throw new RuntimeException("send mail failed!");
             }
-        }else{
-            logger.error("showType: {} is not valid "  ,showTypeName);
-            throw new RuntimeException(String.format("showType: %s is not valid ",showTypeName));
+
+        } else {
+            logger.error("showType: {} is not valid ", showTypeName);
+            throw new RuntimeException(String.format("showType: %s is not valid ", showTypeName));
         }
     }
 
     /**
      * regular expressions match the contents between two specified strings
-     * @param content           content
-     * @param rgex              rgex
-     * @param sqlParamsMap      sql params map
-     * @param paramsPropsMap    params props map
+     *
+     * @param content        content
+     * @param rgex           rgex
+     * @param sqlParamsMap   sql params map
+     * @param paramsPropsMap params props map
      */
-    public void setSqlParamsMap(String content, String rgex, Map<Integer,Property> sqlParamsMap, Map<String,Property> paramsPropsMap){
+    public void setSqlParamsMap(String content, String rgex, Map<Integer, Property> sqlParamsMap, Map<String, Property> paramsPropsMap) {
         Pattern pattern = Pattern.compile(rgex);
         Matcher m = pattern.matcher(content);
         int index = 1;
         while (m.find()) {
 
             String paramName = m.group(1);
-            Property prop =  paramsPropsMap.get(paramName);
+            Property prop = paramsPropsMap.get(paramName);
 
-            sqlParamsMap.put(index,prop);
-            index ++;
+            sqlParamsMap.put(index, prop);
+            index++;
         }
     }
 
     /**
      * print replace sql
-     * @param content       content
-     * @param formatSql     format sql
-     * @param rgex          rgex
-     * @param sqlParamsMap  sql params map
+     *
+     * @param content      content
+     * @param formatSql    format sql
+     * @param rgex         rgex
+     * @param sqlParamsMap sql params map
      */
-    public void printReplacedSql(String content, String formatSql,String rgex, Map<Integer,Property> sqlParamsMap){
+    public void printReplacedSql(String content, String formatSql, String rgex, Map<Integer, Property> sqlParamsMap) {
         //parameter print style
-        logger.info("after replace sql , preparing : {}" , formatSql);
+        logger.info("after replace sql , preparing : {}", formatSql);
         StringBuilder logPrint = new StringBuilder("replaced sql , parameters:");
-        for(int i=1;i<=sqlParamsMap.size();i++){
-            logPrint.append(sqlParamsMap.get(i).getValue()+"("+sqlParamsMap.get(i).getType()+")");
+        for (int i = 1; i <= sqlParamsMap.size(); i++) {
+            logPrint.append(sqlParamsMap.get(i).getValue() + "(" + sqlParamsMap.get(i).getType() + ")");
         }
         logger.info(logPrint.toString());
     }

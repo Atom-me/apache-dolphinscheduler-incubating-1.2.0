@@ -1009,6 +1009,8 @@ public class ProcessDao {
                 return true;
             }
             logger.info("task ready to queue: {}", taskInstance);
+            //添加任务到任务队列,格式：${processInstancePriority}_${processInstanceId}_${taskInstancePriority}_${taskId}_${task executed by ip1},${ip2}...
+            // worker拉取任务时，按优先级（processInstancePriority）排序，然后顺序拉取
             taskQueue.add(DOLPHINSCHEDULER_TASKS_QUEUE, taskZkInfo(taskInstance));
             logger.info(String.format("master insert into queue success, task : %s", taskInstance.getName()));
             return true;
@@ -1066,6 +1068,7 @@ public class ProcessDao {
             String[] ipArray = ips.split(COMMA);
 
             for (String ip : ipArray) {
+                //将IP地址转换为 Long类型，拼接到ZK_node上
                 long ipLong = IpUtils.ipToLong(ip);
                 ipSb.append(ipLong).append(COMMA);
             }

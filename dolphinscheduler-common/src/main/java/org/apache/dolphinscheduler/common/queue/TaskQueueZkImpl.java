@@ -187,6 +187,15 @@ public class TaskQueueZkImpl extends AbstractZKClient implements ITaskQueue {
                     if(taskDetailArrs.length >= 4){
 
                         //format ${processInstancePriority}_${processInstanceId}_${taskInstancePriority}_${taskId}
+                        // "%010d" 对整数进行格式化　,
+                        /**
+                         *   占位符格式为： %[index$][标识]*[最小宽度]转换符
+                         *   示例——将1显示为0001
+                         *   int num = 1;
+                         *   String str = String.format("%04d", num)
+                         *
+                         *   0，若内容长度不足最小宽度，则在左边用0来填充。
+                         */
                         String formatTask = String.format("%s_%010d_%s_%010d", taskDetailArrs[0], Long.parseLong(taskDetailArrs[1]), taskDetailArrs[2], Long.parseLong(taskDetailArrs[3]));
                         if(taskDetailArrs.length > 4){
                             String taskHosts = taskDetailArrs[4];

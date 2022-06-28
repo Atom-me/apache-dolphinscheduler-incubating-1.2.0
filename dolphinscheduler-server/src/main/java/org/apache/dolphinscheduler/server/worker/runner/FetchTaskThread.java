@@ -154,6 +154,7 @@ public class FetchTaskThread implements Runnable{
                 }
 
                 //whether have tasks, if no tasks , no need lock  //get all tasks
+                // 获取队列中的所有任务
                 List<String> tasksQueueList = taskQueue.getAllTasks(Constants.DOLPHINSCHEDULER_TASKS_QUEUE);
                 if (CollectionUtils.isEmpty(tasksQueueList)){
                     continue;
@@ -164,6 +165,7 @@ public class FetchTaskThread implements Runnable{
 
 
                 // task instance id str
+                // 拉去指定数量的任务，（内部使用TreeSet 做好排序）
                 List<String> taskQueueStrArr = taskQueue.poll(Constants.DOLPHINSCHEDULER_TASKS_QUEUE, taskNum);
 
                 for(String taskQueueStr : taskQueueStrArr){
