@@ -228,7 +228,12 @@ public abstract class AbstractZKClient {
         String parentPath = getZNodeParentPath(zkNodeType);
         String serverPathPrefix = parentPath + "/" + OSUtils.getHost();
 
-        // 注册 临时序列节点
+        // 注册 临时序列节点，节点内容写入 主机负载信息 CPU/MEM
+        // registerPath 为临时序列节点，
+        // 在创建子节点的时候，zk会为这个节点名后面追加一个自增的10位整形数字作为新的节点名。这个10位数字的最大范围是整形的最大值，
+        // registerPath = 127.0.0.1_0000000010
+        // registerPath = 127.0.0.1_0000000011
+        // registerPath = 127.0.0.1_0000000012
         String registerPath = zkClient
                 .create()
                 .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)

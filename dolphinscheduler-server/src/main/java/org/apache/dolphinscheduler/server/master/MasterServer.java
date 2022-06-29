@@ -149,16 +149,20 @@ public class MasterServer extends AbstractServer {
 
         /**
          *  register hooks, which are called before the process exits
+         *
+         *  master 进程关闭 钩子函数，
          */
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
+                // 如果活跃的master节点小于1 则 告警通知
                 if (zkMasterClient.getActiveMasterNum() <= 1) {
                     for (int i = 0; i < Constants.DOLPHINSCHEDULER_WARN_TIMES_FAILOVER; i++) {
                         zkMasterClient.getAlertDao().sendServerStopedAlert(
                                 1, OSUtils.getHost(), "Master-Server");
                     }
                 }
+                // 优雅关闭资源
                 stop("shutdownhook");
             }
         }));

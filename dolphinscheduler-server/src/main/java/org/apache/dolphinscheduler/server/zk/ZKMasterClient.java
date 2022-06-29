@@ -143,7 +143,7 @@ public class ZKMasterClient extends AbstractZKClient {
             // monitor worker
             this.listenerWorker();
 
-            // register master
+            // register master，注册master节点
             this.registerMaster();
 
             // check if fault tolerance is required，failure and tolerance
