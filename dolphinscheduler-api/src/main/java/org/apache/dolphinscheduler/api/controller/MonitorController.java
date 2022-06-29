@@ -110,6 +110,8 @@ public class MonitorController extends BaseController{
 
     /**
      * query zookeeper state
+     *
+     * 使用 Four Letter Words （四字命令） 查询 ZK 服务器状态信息
      * @param loginUser login user
      * @return zookeeper information list
      */
