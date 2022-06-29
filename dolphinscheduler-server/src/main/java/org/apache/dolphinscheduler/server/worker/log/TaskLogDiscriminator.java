@@ -45,12 +45,12 @@ public class TaskLogDiscriminator extends AbstractDiscriminator<ILoggingEvent> {
      */
     @Override
     public String getDiscriminatingValue(ILoggingEvent event) {
-        //- [taskAppId=TASK-79-4084-15210]
-        //TASK-79-4084-15210]
+        // - [taskAppId=TASK-79-4084-15210]
+        // TASK-79-4084-15210]
         String loggerName = event.getLoggerName().split(Constants.EQUAL_SIGN)[1];
         String prefix = LoggerUtils.TASK_LOGGER_INFO_PREFIX + "-";
         if (loggerName.startsWith(prefix)) {
-            //79/4084/15210
+            // 79/4084/15210
             return loggerName
                     .substring(prefix.length(), loggerName.length() - 1)
                     .replace("-", "/");
