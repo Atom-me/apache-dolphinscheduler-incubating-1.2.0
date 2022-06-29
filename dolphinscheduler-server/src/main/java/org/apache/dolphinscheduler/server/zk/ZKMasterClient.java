@@ -133,6 +133,7 @@ public class ZKMasterClient extends AbstractZKClient {
 			mutex.acquire();
 
 			// init system znode
+			// 创建 ZK masters， workers， dead-server节点
 			this.initSystemZNode();
 
 			// monitor master
