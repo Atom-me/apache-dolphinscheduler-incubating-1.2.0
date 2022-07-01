@@ -96,7 +96,8 @@ public class ResInfo {
      * @return heart beat info
      */
     public static String getHeartBeatInfo(Date now){
-        return buildHeartbeatForZKInfo(OSUtils.getHost(),
+        return buildHeartbeatForZKInfo(
+                OSUtils.getHost(),
                 OSUtils.getProcessID(),
                 OSUtils.cpuUsage(),
                 OSUtils.memoryUsage(),

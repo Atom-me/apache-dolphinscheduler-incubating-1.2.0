@@ -144,6 +144,14 @@ public class ZKMasterClient extends AbstractZKClient {
             this.listenerWorker();
 
             // register master，注册master节点
+            // 并写入master 主机 心跳负载信息
+            // OSUtils.getHost(),
+            // OSUtils.getProcessID(),
+            // OSUtils.cpuUsage(),
+            // OSUtils.memoryUsage(),
+            // OSUtils.loadAverage(),
+            // DateUtils.dateToString(now),
+            // DateUtils.dateToString(now))
             this.registerMaster();
 
             // check if fault tolerance is required，failure and tolerance
@@ -223,7 +231,9 @@ public class ZKMasterClient extends AbstractZKClient {
          *  只能监控一级子节点，无法对二级子节点进行事件监听
          */
         masterPathChildrenCache = new PathChildrenCache(zkClient,
-                getZNodeParentPath(ZKNodeType.MASTER), true, defaultThreadFactory);
+                                                        getZNodeParentPath(ZKNodeType.MASTER),
+                                                        true,
+                                                        defaultThreadFactory);
 
         try {
             masterPathChildrenCache.start();

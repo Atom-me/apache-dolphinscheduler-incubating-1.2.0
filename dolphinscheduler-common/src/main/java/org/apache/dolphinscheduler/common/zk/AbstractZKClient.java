@@ -159,6 +159,16 @@ public abstract class AbstractZKClient {
             if (splits.length != Constants.HEARTBEAT_FOR_ZOOKEEPER_INFO_LENGTH) {
                 return;
             }
+
+            /**
+             *  splits[0] -> OSUtils.getHost(),
+             *  splits[1] -> OSUtils.getProcessID(),
+             *  splits[2] -> OSUtils.cpuUsage(),
+             *  splits[3] -> OSUtils.memoryUsage(),
+             *  splits[4] -> OSUtils.loadAverage(),
+             *  splits[5] -> DateUtils.dateToString(now),
+             *  splits[6] -> DateUtils.dateToString(now))
+             */
             String str = splits[0] + Constants.COMMA
                     + splits[1] + Constants.COMMA
                     + OSUtils.cpuUsage() + Constants.COMMA
@@ -257,6 +267,7 @@ public abstract class AbstractZKClient {
             logger.error("register failure , {} server already started on host : {}", zkNodeType.toString(), host);
             return null;
         }
+        // 临时序列节点
         registerPath = createZNodePath(zkNodeType);
 
         // handle dead server ，删除已经挂掉的节点？
@@ -291,7 +302,6 @@ public abstract class AbstractZKClient {
             String deadServerPath = getDeadZNodeParentPath() + SINGLE_SLASH + type + UNDERLINE + ipSeqNo;
             if (zkClient.checkExists().forPath(deadServerPath) == null) {
                 //add dead server info to zk dead server path : /dead-servers/
-
                 zkClient.create().forPath(deadServerPath, (type + UNDERLINE + ipSeqNo).getBytes());
 
                 logger.info("{} server dead , and {} added to zk dead server path success",
@@ -543,8 +553,10 @@ public abstract class AbstractZKClient {
      */
     private void createNodePath(String zNodeParentPath) throws Exception {
         if (null == zkClient.checkExists().forPath(zNodeParentPath)) {
-            zkClient.create().creatingParentContainersIfNeeded()
-                    .withMode(CreateMode.PERSISTENT).forPath(zNodeParentPath);
+            zkClient.create()
+                    .creatingParentContainersIfNeeded()
+                    .withMode(CreateMode.PERSISTENT)
+                    .forPath(zNodeParentPath);
         }
     }
 

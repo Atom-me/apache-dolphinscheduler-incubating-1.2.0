@@ -53,31 +53,32 @@ public class MasterServer extends AbstractServer {
     private static final Logger logger = LoggerFactory.getLogger(MasterServer.class);
 
     /**
-     *  zk master client
+     * zk master client
      */
     private ZKMasterClient zkMasterClient = null;
 
     /**
-     *  heartbeat thread pool
+     * master心跳线程池
      */
     private ScheduledExecutorService heartbeatMasterService;
 
     /**
-     *  dolphinscheduler database interface
+     * dolphinscheduler database interface
      */
     @Autowired
     protected ProcessDao processDao;
 
     /**
-     *  master exec thread pool
+     * master exec thread pool
      */
     private ExecutorService masterSchedulerService;
 
 
     /**
      * master server startup
-     *
+     * <p>
      * master server not use web service
+     *
      * @param args arguments
      */
     public static void main(String[] args) {
@@ -89,17 +90,18 @@ public class MasterServer extends AbstractServer {
      * run master server
      */
     @PostConstruct
-    public void run(){
+    public void run() {
 
         try {
             conf = new PropertiesConfiguration(Constants.MASTER_PROPERTIES_PATH);
-        }catch (ConfigurationException e){
-            logger.error("load configuration failed : " + e.getMessage(),e);
+        } catch (ConfigurationException e) {
+            logger.error("load configuration failed : " + e.getMessage(), e);
             System.exit(1);
         }
 
         masterSchedulerService = ThreadUtils.newDaemonSingleThreadExecutor("Master-Scheduler-Thread");
 
+        // 初始化 ZK master 客户端，并注册当前master节点到 ZK
         zkMasterClient = ZKMasterClient.getZKMasterClient(processDao);
 
         // heartbeat interval
@@ -111,7 +113,7 @@ public class MasterServer extends AbstractServer {
                 Constants.defaultMasterExecThreadNum);
 
 
-        heartbeatMasterService = ThreadUtils.newDaemonThreadScheduledExecutor("Master-Main-Thread",Constants.defaulMasterHeartbeatThreadNum);
+        heartbeatMasterService = ThreadUtils.newDaemonThreadScheduledExecutor("Master-Main-Thread", Constants.defaulMasterHeartbeatThreadNum);
 
         // heartbeat thread implement
         Runnable heartBeatThread = heartBeatThread();
@@ -120,13 +122,12 @@ public class MasterServer extends AbstractServer {
 
         // regular heartbeat
         // delay 5 seconds, send heartbeat every 30 seconds
-        heartbeatMasterService.
-                scheduleAtFixedRate(heartBeatThread, 5, heartBeatInterval, TimeUnit.SECONDS);
+        heartbeatMasterService.scheduleAtFixedRate(heartBeatThread, 5, heartBeatInterval, TimeUnit.SECONDS);
 
         // master scheduler thread
         MasterSchedulerThread masterSchedulerThread = new MasterSchedulerThread(
                 zkMasterClient,
-                processDao,conf,
+                processDao, conf,
                 masterExecThreadNum);
 
         // submit master scheduler thread
@@ -171,6 +172,7 @@ public class MasterServer extends AbstractServer {
 
     /**
      * gracefully stop
+     *
      * @param cause why stopping
      */
     @Override
@@ -178,7 +180,7 @@ public class MasterServer extends AbstractServer {
 
         try {
             //execute only once
-            if(Stopper.isStoped()){
+            if (Stopper.isStoped()) {
                 return;
             }
 
@@ -190,46 +192,46 @@ public class MasterServer extends AbstractServer {
             try {
                 //thread sleep 3 seconds for thread quitely stop
                 Thread.sleep(3000L);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("thread sleep exception:" + e.getMessage(), e);
             }
             try {
                 heartbeatMasterService.shutdownNow();
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("heartbeat service stopped exception");
             }
 
             logger.info("heartbeat service stopped");
 
             //close quartz
-            try{
+            try {
                 QuartzExecutors.getInstance().shutdown();
-            }catch (Exception e){
-                logger.warn("Quartz service stopped exception:{}",e.getMessage());
+            } catch (Exception e) {
+                logger.warn("Quartz service stopped exception:{}", e.getMessage());
             }
 
             logger.info("Quartz service stopped");
 
             try {
                 ThreadPoolExecutors.getInstance().shutdown();
-            }catch (Exception e){
-                logger.warn("threadpool service stopped exception:{}",e.getMessage());
+            } catch (Exception e) {
+                logger.warn("threadpool service stopped exception:{}", e.getMessage());
             }
 
             logger.info("threadpool service stopped");
 
             try {
                 masterSchedulerService.shutdownNow();
-            }catch (Exception e){
-                logger.warn("master scheduler service stopped exception:{}",e.getMessage());
+            } catch (Exception e) {
+                logger.warn("master scheduler service stopped exception:{}", e.getMessage());
             }
 
             logger.info("master scheduler service stopped");
 
             try {
                 zkMasterClient.close();
-            }catch (Exception e){
-                logger.warn("zookeeper service stopped exception:{}",e.getMessage());
+            } catch (Exception e) {
+                logger.warn("zookeeper service stopped exception:{}", e.getMessage());
             }
 
             logger.info("zookeeper service stopped");
@@ -243,14 +245,15 @@ public class MasterServer extends AbstractServer {
 
 
     /**
-     *  heartbeat thread implement
+     * heartbeat thread implement
+     *
      * @return
      */
-    private Runnable heartBeatThread(){
-        Runnable heartBeatThread  = new Runnable() {
+    private Runnable heartBeatThread() {
+        Runnable heartBeatThread = new Runnable() {
             @Override
             public void run() {
-                if(Stopper.isRunning()) {
+                if (Stopper.isRunning()) {
                     // send heartbeat to zk
                     if (StringUtils.isBlank(zkMasterClient.getMasterZNode())) {
                         logger.error("master send heartbeat to zk failed: can't find zookeeper path of master server");
