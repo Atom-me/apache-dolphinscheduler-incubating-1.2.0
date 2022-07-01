@@ -233,6 +233,7 @@ public class FetchTaskThread implements Runnable{
                     workerExecService.submit(new TaskScheduleThread(taskInstance, processDao));
 
                     // remove node from zk
+                    //任务提交之后，删除队列中的任务节点信息
                     removeNodeFromTaskQueue(taskQueueStr);
                 }
 
